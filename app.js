@@ -96,7 +96,7 @@ function detectChangesAndRefs(text, hasModificaciones) {
         cambios.push('Reemplaza/actualiza texto normativo previo.');
     }
     // Detecta si hay especificaciones técnicas mencionadas
-    if (/(manual|validaci[\u00f3o]n|formato)/i.test(text)) {
+    if (/(manual|validaci[óo]n|formato)/i.test(text)) {
         cambios.push('Introduce/actualiza especificaciones técnicas (manual, validaciones, formatos).');
     }
     // Detecta referencias legislativas (Ley, RGAA)
@@ -116,6 +116,85 @@ function detectChangesAndRefs(text, hasModificaciones) {
     return { cambios, referencias };
 }
 
+// Extrae información avanzada: plazos, excepciones, riesgos, costos, derechos, impacto administrativo y mejoras.
+function extractAdvanced(text) {
+    const plazos = [];
+    // Buscar frases con números seguidos de días, meses o años
+    const plazoRegex = /(\b\d{1,3})\s*(d[ií]as|días|dias|meses|años|año|corridos|hábiles|habiles)/gi;
+    let m;
+    while ((m = plazoRegex.exec(text)) !== null) {
+        plazos.push(`${m[1]} ${m[2]}`.trim());
+    }
+    // Excepciones: frases que contienen “exceptu” o “salvo”
+    const excepciones = [];
+    const excRegex = /([^.\n]*\b(exceptuad[oa]s?|exceptúase|exceptuase|exceptuase|exceptúe|exceptu[ée]se|exceptuarán|exceptúe|salvo|quedan exceptuadas)[^.\n]*)/gi;
+    let ex;
+    while ((ex = excRegex.exec(text)) !== null) {
+        excepciones.push(ex[1].trim());
+    }
+    // Riesgos jurídicos: identificar sanciones, multas, fiscalización, retroactividad, discrecionalidad, contradicciones
+    const riesgos = [];
+    if (/sancion(es)?|multas?|suspensi[oó]n|fiscalizaci[oó]n|multa|punible/gi.test(text)) {
+        riesgos.push('Se mencionan sanciones o multas que pueden implicar alto riesgo jurídico.');
+    }
+    if (/(retroactiva|retroactividad)/i.test(text)) {
+        riesgos.push('Contiene retroactividad o efectos retroactivos, lo que aumenta el riesgo de impugnación.');
+    }
+    if (/(a\s*criterio\s*de|seg[uú]n disponga)/i.test(text)) {
+        riesgos.push('Incluye cláusulas ambiguas o discrecionales (“a criterio de…”, “según disponga…”), lo que puede generar incertidumbre jurídica.');
+    }
+    // Costos: detectar drivers como reportes, sistemas, capacitación, auditorías
+    const costos = [];
+    if (/(reportes?|informes|sistemas|plataformas|tecnol[oó]gic[ao]s)/i.test(text)) {
+        costos.push('Nuevos reportes o ajustes de sistemas que incrementan el esfuerzo técnico.');
+    }
+    if (/(capacitaci[oó]n|formaci[oó]n)/i.test(text)) {
+        costos.push('Requiere capacitación del personal.');
+    }
+    if (/(auditor[ií]a|control|verificaci[oó]n)/i.test(text)) {
+        costos.push('Incrementa los costos por auditorías, control o verificación.');
+    }
+    if (/(capital|reservas)/i.test(text)) {
+        costos.push('Puede aumentar las exigencias de capital o reservas, impactando en costos financieros.');
+    }
+    // Derechos afectados: detectar actores (asegurado, aseguradora, productor) y si se menciona derechos o obligaciones
+    const derechos = [];
+    if (/(asegurad[ao]s|asegurables)/i.test(text)) {
+        derechos.push('Puede afectar derechos u obligaciones de asegurados/asegurables.');
+    }
+    if (/(aseguradoras|entidades aseguradoras)/i.test(text)) {
+        derechos.push('Implica obligaciones para las aseguradoras.');
+    }
+    if (/(productores? de seguros|intermediarios)/i.test(text)) {
+        derechos.push('Puede tener impacto en productores o intermediarios de seguros.');
+    }
+    // Impacto administrativo: procesos, informes, seguimiento
+    const impacto = [];
+    if (/(informaci[oó]n|registro|seguimiento|procesos|reportes|cargas)/i.test(text)) {
+        impacto.push('Genera nuevas tareas administrativas y de seguimiento.');
+    }
+    if (/(sistema|plataforma|manual t[eé]cnico)/i.test(text)) {
+        impacto.push('Requiere adecuar sistemas o plataformas internas.');
+    }
+    // Mejora u obsolescencia: detectar términos de actualización, modernización
+    const mejoras = [];
+    if (/(actualizar|modernizar|armonizar|adecuar|homogeneiza|adecuaci[oó]n)/i.test(text)) {
+        mejoras.push('Introduce actualizaciones o adecuaciones que corrigen obsolescencias.');
+    }
+    if (/(elimin[ae]|deroga)/i.test(text)) {
+        mejoras.push('Elimina disposiciones o anexos obsoletos.');
+    }
+    return {
+        plazos,
+        excepciones,
+        riesgos,
+        costos,
+        derechos,
+        impacto,
+        mejoras
+    };
+}
+
 function updateTable() {
     const tbody = document.getElementById('tabla-registros');
     tbody.innerHTML = '';
@@ -128,6 +207,7 @@ function updateTable() {
             <td>${reg.tema || ''}</td>
             <td>${reg.estado || 'Nueva'}</td>
             <td>${prioridadHtml}</td>
+            <td>${reg.urgencia || ''}</td>
             <td>${reg.responsable}</td>
             <td>
                 <button class="accion-btn editar-btn" data-codigo="${reg.codigo}">Editar</button>
@@ -295,6 +375,79 @@ document.getElementById('btn-analizar').addEventListener('click', () => {
     } else {
         refsDiv.innerHTML = '';
     }
+
+    // Análisis avanzado
+    const adv = extractAdvanced(texto);
+    // Plazos
+    const plazosDiv = document.getElementById('resultado-plazos');
+    if (adv.plazos.length > 0) {
+        let plHtml = '<strong>Plazos y vigencias:</strong><ul>';
+        adv.plazos.forEach(p => { plHtml += `<li>${p}</li>`; });
+        plHtml += '</ul>';
+        plazosDiv.innerHTML = plHtml;
+    } else {
+        plazosDiv.innerHTML = '';
+    }
+    // Excepciones
+    const excDiv = document.getElementById('resultado-excepciones');
+    if (adv.excepciones.length > 0) {
+        let exHtml = '<strong>Excepciones:</strong><ul>';
+        adv.excepciones.forEach(e => { exHtml += `<li>${e}</li>`; });
+        exHtml += '</ul>';
+        excDiv.innerHTML = exHtml;
+    } else {
+        excDiv.innerHTML = '';
+    }
+    // Riesgos
+    const riesgDiv = document.getElementById('resultado-riesgos');
+    if (adv.riesgos.length > 0) {
+        let rgHtml = '<strong>Riesgos jurídicos:</strong><ul>';
+        adv.riesgos.forEach(rg => { rgHtml += `<li>${rg}</li>`; });
+        rgHtml += '</ul>';
+        riesgDiv.innerHTML = rgHtml;
+    } else {
+        riesgDiv.innerHTML = '';
+    }
+    // Costos
+    const costDiv = document.getElementById('resultado-costos');
+    if (adv.costos.length > 0) {
+        let coHtml = '<strong>Costos e impacto financiero:</strong><ul>';
+        adv.costos.forEach(c => { coHtml += `<li>${c}</li>`; });
+        coHtml += '</ul>';
+        costDiv.innerHTML = coHtml;
+    } else {
+        costDiv.innerHTML = '';
+    }
+    // Derechos
+    const derDiv = document.getElementById('resultado-derechos');
+    if (adv.derechos.length > 0) {
+        let drHtml = '<strong>Derechos afectados:</strong><ul>';
+        adv.derechos.forEach(d => { drHtml += `<li>${d}</li>`; });
+        drHtml += '</ul>';
+        derDiv.innerHTML = drHtml;
+    } else {
+        derDiv.innerHTML = '';
+    }
+    // Impacto administrativo
+    const impDiv = document.getElementById('resultado-impacto');
+    if (adv.impacto.length > 0) {
+        let imHtml = '<strong>Impacto administrativo:</strong><ul>';
+        adv.impacto.forEach(i => { imHtml += `<li>${i}</li>`; });
+        imHtml += '</ul>';
+        impDiv.innerHTML = imHtml;
+    } else {
+        impDiv.innerHTML = '';
+    }
+    // Mejoras y obsolescencias
+    const mejDiv = document.getElementById('resultado-mejoras');
+    if (adv.mejoras.length > 0) {
+        let meHtml = '<strong>Obsolescencias y mejoras:</strong><ul>';
+        adv.mejoras.forEach(mj => { meHtml += `<li>${mj}</li>`; });
+        meHtml += '</ul>';
+        mejDiv.innerHTML = meHtml;
+    } else {
+        mejDiv.innerHTML = '';
+    }
 });
 
 // Calcular prioridad
@@ -323,15 +476,17 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
         prioridad = '🔴 Alta';
         clase = 'alta';
     } else if (impacto === 'Alto' || urgencia === '30 días') {
-        prioridad = '🔶 Media';
+        prioridad = '🟠 Media';
         clase = 'media';
     } else {
-        prioridad = '🔵 Baja';
+        prioridad = '🟢 Baja';
         clase = 'baja';
     }
-    // Guardamos prioridad en registro
+    // Guardamos prioridad, impacto y urgencia en registro
     reg.prioridad = prioridad;
     reg.prioridadClass = clase;
+    reg.impacto = impacto;
+    reg.urgencia = urgencia;
     resultDiv.innerHTML = 'Prioridad: <span class="badge ' + clase + '">' + prioridad + '</span>';
     updateTable();
 });
