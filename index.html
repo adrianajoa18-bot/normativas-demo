@@ -1,0 +1,94 @@
+index.html<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normativas Seguros – Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Normativas Seguros – Demo</h1>
+        <p>Plataforma interna: registrar → analizar con IA → priorizar → validar → digest.</p>
+    </header>
+    <div class="container">
+        <section class="panel" id="panel-registro">
+            <h2>1) Cargar norma</h2>
+            <form id="reg-form">
+                <label>Código</label>
+                <input type="text" id="codigo" placeholder="Ej: SSN_REAL_001" required>
+                <label>Fuente</label>
+                <input type="text" id="fuente" placeholder="SSN" required>
+                <label>Título oficial de la norma</label>
+                <input type="text" id="titulo" required>
+                <label>Fecha</label>
+                <input type="date" id="fecha" required>
+                <label>Tipo</label>
+                <select id="tipo" required>
+                    <option value="">--</option>
+                    <option value="Resolución">Resolución</option>
+                    <option value="Circular">Circular</option>
+                    <option value="Disposición">Disposición</option>
+                </select>
+                <label>Link oficial</label>
+                <input type="url" id="link" placeholder="https://..." required>
+                <label>Responsable</label>
+                <input type="text" id="responsable" placeholder="Jessica Ojeda" required>
+                <button type="submit">Crear registro</button>
+            </form>
+            <div id="msg-registro" class="msg"></div>
+        </section>
+        <section class="panel" id="panel-analizar">
+            <h2>2) Analizar con IA</h2>
+            <p><small>Pegá texto → IA genera resumen/impacto/checklist</small></p>
+            <label>Código (debe existir)</label>
+            <input type="text" id="codigo-analisis" placeholder="SSN_REAL_001" required>
+            <label>Texto de la norma (extracto)</label>
+            <textarea id="texto" placeholder="Pegá acá el texto..." rows="5" required></textarea>
+            <div class="buttons">
+                <button id="btn-analizar">Analizar</button>
+                <button id="btn-actualizar">Actualizar listado</button>
+            </div>
+            <div id="resultado-analisis" class="analysis"></div>
+            <div class="prioridad-config">
+                <label>Impacto</label>
+                <select id="impacto">
+                    <option value="Alto">Alto</option>
+                    <option value="Medio">Medio</option>
+                    <option value="Bajo">Bajo</option>
+                </select>
+                <label>Urgencia</label>
+                <select id="urgencia">
+                    <option value="Inmediata">Inmediata</option>
+                    <option value="30 días">30 días</option>
+                    <option value=">60 días">&gt;60 días</option>
+                </select>
+                <button id="btn-calcular">Calcular</button>
+            </div>
+            <div id="resultado-prioridad" class="priority"></div>
+        </section>
+        <section class="panel" id="panel-tablero">
+            <h2>3) Tablero</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Título</th>
+                        <th>Tema</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Responsable</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-registros">
+                    <!-- filas dinámicas -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+    <footer>
+        <small>Demo ejecutable. La IA no toma decisiones ni reemplaza validación humana. Fuentes oficiales deben enlazarse en producción.</small>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
