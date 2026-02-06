@@ -219,284 +219,267 @@ function updateTable() {
     saveRegistros();
 }
 
-// Delegación de eventos para botones de edición y eliminación en la tabla
-document.getElementById('tabla-registros').addEventListener('click', (e) => {
-    const target = e.target;
-    const codigo = target.getAttribute('data-codigo');
-    if (!codigo) return;
-    if (target.classList.contains('editar-btn')) {
-        // Buscar registro y rellenar formulario con sus datos
-        const reg = registros.find(r => r.codigo === codigo);
-        if (!reg) return;
-        codigoEditando = codigo;
-        // Rellenar formulario de registro
-        document.getElementById('codigo').value = reg.codigo;
-        document.getElementById('fuente').value = reg.fuente;
-        document.getElementById('titulo').value = reg.titulo;
-        document.getElementById('fecha').value = reg.fecha;
-        document.getElementById('tipo').value = reg.tipo;
-        document.getElementById('link').value = reg.link;
-        document.getElementById('responsable').value = reg.responsable;
-        document.getElementById('msg-registro').textContent = 'Editando registro existente. Modifique los campos y vuelva a guardar.';
-    } else if (target.classList.contains('eliminar-btn')) {
-        // Eliminar registro
-        const confirmDelete = confirm('¿Está seguro de que desea eliminar este registro?');
-        if (!confirmDelete) return;
-        registros = registros.filter(r => r.codigo !== codigo);
-        // Actualizar y guardar
-        updateTable();
-        document.getElementById('msg-registro').textContent = 'Registro eliminado.';
-    }
-});
-
-// Manejo de registro de normas
-document.getElementById('reg-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const msgDiv = document.getElementById('msg-registro');
-    msgDiv.textContent = '';
-    const codigo = document.getElementById('codigo').value.trim();
-    const fuente = document.getElementById('fuente').value.trim();
-    const titulo = document.getElementById('titulo').value.trim();
-    const fecha = document.getElementById('fecha').value;
-    const tipo = document.getElementById('tipo').value;
-    const link = document.getElementById('link').value.trim();
-    const responsable = document.getElementById('responsable').value.trim();
-    // Validaciones básicas
-    if (!codigo || !fuente || !titulo || !fecha || !tipo || !link || !responsable) {
-        msgDiv.textContent = 'Complete todos los campos obligatorios.';
-        return;
-    }
-    if (codigoEditando) {
-        // Estamos editando un registro existente
-        const index = registros.findIndex(r => r.codigo === codigoEditando);
-        if (index !== -1) {
-            // Actualizar campos; permitimos cambiar el código siempre que no duplique
-            if (codigo !== codigoEditando && registros.some(r => r.codigo === codigo)) {
-                msgDiv.textContent = 'Ya existe otro registro con ese código.';
-                return;
-            }
-            registros[index] = {
-                ...registros[index],
-                codigo,
-                fuente,
-                titulo,
-                fecha,
-                tipo,
-                link,
-                responsable
-            };
-            msgDiv.textContent = 'Registro actualizado correctamente.';
+// Función para inicializar los listeners y mostrar registros una vez que el DOM está listo
+function initListeners() {
+    // Delegación de eventos para botones de edición y eliminación en la tabla
+    document.getElementById('tabla-registros').addEventListener('click', (e) => {
+        const target = e.target;
+        const codigo = target.getAttribute('data-codigo');
+        if (!codigo) return;
+        if (target.classList.contains('editar-btn')) {
+            const reg = registros.find(r => r.codigo === codigo);
+            if (!reg) return;
+            codigoEditando = codigo;
+            document.getElementById('codigo').value = reg.codigo;
+            document.getElementById('fuente').value = reg.fuente;
+            document.getElementById('titulo').value = reg.titulo;
+            document.getElementById('fecha').value = reg.fecha;
+            document.getElementById('tipo').value = reg.tipo;
+            document.getElementById('link').value = reg.link;
+            document.getElementById('responsable').value = reg.responsable;
+            document.getElementById('msg-registro').textContent = 'Editando registro existente. Modifique los campos y vuelva a guardar.';
+        } else if (target.classList.contains('eliminar-btn')) {
+            const confirmDelete = confirm('¿Está seguro de que desea eliminar este registro?');
+            if (!confirmDelete) return;
+            registros = registros.filter(r => r.codigo !== codigo);
+            updateTable();
+            document.getElementById('msg-registro').textContent = 'Registro eliminado.';
         }
-        codigoEditando = null;
-    } else {
-        // Creación de nuevo registro
-        if (registros.find(r => r.codigo === codigo)) {
-            msgDiv.textContent = 'Ese código ya existe.';
+    });
+
+    // Manejo de registro de normas
+    document.getElementById('reg-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msgDiv = document.getElementById('msg-registro');
+        msgDiv.textContent = '';
+        const codigo = document.getElementById('codigo').value.trim();
+        const fuente = document.getElementById('fuente').value.trim();
+        const titulo = document.getElementById('titulo').value.trim();
+        const fecha = document.getElementById('fecha').value;
+        const tipo = document.getElementById('tipo').value;
+        const link = document.getElementById('link').value.trim();
+        const responsable = document.getElementById('responsable').value.trim();
+        if (!codigo || !fuente || !titulo || !fecha || !tipo || !link || !responsable) {
+            msgDiv.textContent = 'Complete todos los campos obligatorios.';
             return;
         }
-        registros.push({ codigo, fuente, titulo, fecha, tipo, link, responsable, estado: 'Nueva', prioridad: '', prioridadClass: '' });
-        msgDiv.textContent = 'Registro creado correctamente.';
-    }
-    // Limpiar formulario y actualizar tabla
-    e.target.reset();
-    updateTable();
-});
-
-// Análisis de norma
-document.getElementById('btn-analizar').addEventListener('click', () => {
-    const codigo = document.getElementById('codigo-analisis').value.trim();
-    const texto = document.getElementById('texto').value.trim();
-    const resDiv = document.getElementById('resultado-analisis');
-    resDiv.innerHTML = '';
-    if (!codigo || !texto) {
-        resDiv.textContent = 'Indique código y texto para analizar.';
-        return;
-    }
-    const reg = registros.find(r => r.codigo === codigo);
-    if (!reg) {
-        resDiv.textContent = 'El código no existe en el registro.';
-        return;
-    }
-    const analisis = analyzeText(texto);
-    let html = `<strong>Resumen:</strong> <p>${analisis.resumen}</p>`;
-    if (analisis.articulos.length > 0) {
-        html += '<strong>Artículos mencionados:</strong><ul>';
-        analisis.articulos.forEach(a => { html += `<li>${a}</li>`; });
-        html += '</ul>';
-    }
-    if (analisis.modificaciones) {
-        html += `<strong>Modificaciones:</strong> <p>${analisis.modificaciones}</p>`;
-    }
-    if (analisis.anexos.length > 0) {
-        html += '<strong>Anexos:</strong><ul>';
-        analisis.anexos.forEach(ax => { html += `<li>${ax}</li>`; });
-        html += '</ul>';
-    }
-    if (Object.keys(analisis.vocabulario).length > 0) {
-        html += '<strong>Glosario:</strong><ul>';
-        for (const [term, def] of Object.entries(analisis.vocabulario)) {
-            html += `<li><em>${term}</em>: ${def}</li>`;
+        if (codigoEditando) {
+            const index = registros.findIndex(r => r.codigo === codigoEditando);
+            if (index !== -1) {
+                if (codigo !== codigoEditando && registros.some(r => r.codigo === codigo)) {
+                    msgDiv.textContent = 'Ya existe otro registro con ese código.';
+                    return;
+                }
+                registros[index] = {
+                    ...registros[index],
+                    codigo,
+                    fuente,
+                    titulo,
+                    fecha,
+                    tipo,
+                    link,
+                    responsable
+                };
+                msgDiv.textContent = 'Registro actualizado correctamente.';
+            }
+            codigoEditando = null;
+        } else {
+            if (registros.find(r => r.codigo === codigo)) {
+                msgDiv.textContent = 'Ese código ya existe.';
+                return;
+            }
+            registros.push({ codigo, fuente, titulo, fecha, tipo, link, responsable, estado: 'Nueva', prioridad: '', prioridadClass: '' });
+            msgDiv.textContent = 'Registro creado correctamente.';
         }
-        html += '</ul>';
-    }
-    html += `<strong>Comparación:</strong> <p>${analisis.comparacion_previos}</p>`;
-    resDiv.innerHTML = html;
-    // Construir checklist accionable
-    const checklistDiv = document.getElementById('resultado-checklist');
-    if (CHECKLIST.length > 0) {
-        let chkHtml = '<strong>Checklist accionable:</strong><table><thead><tr><th>Tarea</th><th>Área</th><th>Plazo</th></tr></thead><tbody>';
-        CHECKLIST.forEach(item => {
-            chkHtml += `<tr><td>${item.tarea}</td><td>${item.area}</td><td>${item.plazo}</td></tr>`;
-        });
-        chkHtml += '</tbody></table>';
-        checklistDiv.innerHTML = chkHtml;
-    } else {
-        checklistDiv.innerHTML = '';
-    }
-    // Detectar cambios y referencias
-    const extra = detectChangesAndRefs(texto, analisis.modificaciones !== '');
-    const cambiosDiv = document.getElementById('resultado-cambios');
-    if (extra.cambios.length > 0) {
-        let cambHtml = '<strong>Qué cambia:</strong><ul>';
-        extra.cambios.forEach(c => { cambHtml += `<li>${c}</li>`; });
-        cambHtml += '</ul>';
-        cambiosDiv.innerHTML = cambHtml;
-    } else {
-        cambiosDiv.innerHTML = '';
-    }
-    const refsDiv = document.getElementById('resultado-referencias');
-    if (extra.referencias.length > 0) {
-        let refHtml = '<strong>Referencias:</strong><ul>';
-        extra.referencias.forEach(r => {
-            refHtml += `<li><strong>${r.ref}</strong>: ${r.desc}</li>`;
-        });
-        refHtml += '</ul>';
-        refsDiv.innerHTML = refHtml;
-    } else {
-        refsDiv.innerHTML = '';
-    }
+        e.target.reset();
+        updateTable();
+    });
 
-    // Análisis avanzado
-    const adv = extractAdvanced(texto);
-    // Plazos
-    const plazosDiv = document.getElementById('resultado-plazos');
-    if (adv.plazos.length > 0) {
-        let plHtml = '<strong>Plazos y vigencias:</strong><ul>';
-        adv.plazos.forEach(p => { plHtml += `<li>${p}</li>`; });
-        plHtml += '</ul>';
-        plazosDiv.innerHTML = plHtml;
-    } else {
-        plazosDiv.innerHTML = '';
-    }
-    // Excepciones
-    const excDiv = document.getElementById('resultado-excepciones');
-    if (adv.excepciones.length > 0) {
-        let exHtml = '<strong>Excepciones:</strong><ul>';
-        adv.excepciones.forEach(e => { exHtml += `<li>${e}</li>`; });
-        exHtml += '</ul>';
-        excDiv.innerHTML = exHtml;
-    } else {
-        excDiv.innerHTML = '';
-    }
-    // Riesgos
-    const riesgDiv = document.getElementById('resultado-riesgos');
-    if (adv.riesgos.length > 0) {
-        let rgHtml = '<strong>Riesgos jurídicos:</strong><ul>';
-        adv.riesgos.forEach(rg => { rgHtml += `<li>${rg}</li>`; });
-        rgHtml += '</ul>';
-        riesgDiv.innerHTML = rgHtml;
-    } else {
-        riesgDiv.innerHTML = '';
-    }
-    // Costos
-    const costDiv = document.getElementById('resultado-costos');
-    if (adv.costos.length > 0) {
-        let coHtml = '<strong>Costos e impacto financiero:</strong><ul>';
-        adv.costos.forEach(c => { coHtml += `<li>${c}</li>`; });
-        coHtml += '</ul>';
-        costDiv.innerHTML = coHtml;
-    } else {
-        costDiv.innerHTML = '';
-    }
-    // Derechos
-    const derDiv = document.getElementById('resultado-derechos');
-    if (adv.derechos.length > 0) {
-        let drHtml = '<strong>Derechos afectados:</strong><ul>';
-        adv.derechos.forEach(d => { drHtml += `<li>${d}</li>`; });
-        drHtml += '</ul>';
-        derDiv.innerHTML = drHtml;
-    } else {
-        derDiv.innerHTML = '';
-    }
-    // Impacto administrativo
-    const impDiv = document.getElementById('resultado-impacto');
-    if (adv.impacto.length > 0) {
-        let imHtml = '<strong>Impacto administrativo:</strong><ul>';
-        adv.impacto.forEach(i => { imHtml += `<li>${i}</li>`; });
-        imHtml += '</ul>';
-        impDiv.innerHTML = imHtml;
-    } else {
-        impDiv.innerHTML = '';
-    }
-    // Mejoras y obsolescencias
-    const mejDiv = document.getElementById('resultado-mejoras');
-    if (adv.mejoras.length > 0) {
-        let meHtml = '<strong>Obsolescencias y mejoras:</strong><ul>';
-        adv.mejoras.forEach(mj => { meHtml += `<li>${mj}</li>`; });
-        meHtml += '</ul>';
-        mejDiv.innerHTML = meHtml;
-    } else {
-        mejDiv.innerHTML = '';
-    }
-});
+    // Análisis de norma
+    document.getElementById('btn-analizar').addEventListener('click', () => {
+        const codigoAnalisis = document.getElementById('codigo-analisis').value.trim();
+        const texto = document.getElementById('texto').value.trim();
+        const resDiv = document.getElementById('resultado-analisis');
+        resDiv.innerHTML = '';
+        if (!codigoAnalisis || !texto) {
+            resDiv.textContent = 'Indique código y texto para analizar.';
+            return;
+        }
+        const reg = registros.find(r => r.codigo === codigoAnalisis);
+        if (!reg) {
+            resDiv.textContent = 'El código no existe en el registro.';
+            return;
+        }
+        const analisis = analyzeText(texto);
+        let html = `<strong>Resumen:</strong> <p>${analisis.resumen}</p>`;
+        if (analisis.articulos.length > 0) {
+            html += '<strong>Artículos mencionados:</strong><ul>';
+            analisis.articulos.forEach(a => { html += `<li>${a}</li>`; });
+            html += '</ul>';
+        }
+        if (analisis.modificaciones) {
+            html += `<strong>Modificaciones:</strong> <p>${analisis.modificaciones}</p>`;
+        }
+        if (analisis.anexos.length > 0) {
+            html += '<strong>Anexos:</strong><ul>';
+            analisis.anexos.forEach(ax => { html += `<li>${ax}</li>`; });
+            html += '</ul>';
+        }
+        if (Object.keys(analisis.vocabulario).length > 0) {
+            html += '<strong>Glosario:</strong><ul>';
+            for (const [term, def] of Object.entries(analisis.vocabulario)) {
+                html += `<li><em>${term}</em>: ${def}</li>`;
+            }
+            html += '</ul>';
+        }
+        html += `<strong>Comparación:</strong> <p>${analisis.comparacion_previos}</p>`;
+        resDiv.innerHTML = html;
+        const checklistDiv = document.getElementById('resultado-checklist');
+        if (CHECKLIST.length > 0) {
+            let chkHtml = '<strong>Checklist accionable:</strong><table><thead><tr><th>Tarea</th><th>Área</th><th>Plazo</th></tr></thead><tbody>';
+            CHECKLIST.forEach(item => {
+                chkHtml += `<tr><td>${item.tarea}</td><td>${item.area}</td><td>${item.plazo}</td></tr>`;
+            });
+            chkHtml += '</tbody></table>';
+            checklistDiv.innerHTML = chkHtml;
+        } else {
+            checklistDiv.innerHTML = '';
+        }
+        const extra = detectChangesAndRefs(texto, analisis.modificaciones !== '');
+        const cambiosDiv = document.getElementById('resultado-cambios');
+        if (extra.cambios.length > 0) {
+            let cambHtml = '<strong>Qué cambia:</strong><ul>';
+            extra.cambios.forEach(c => { cambHtml += `<li>${c}</li>`; });
+            cambHtml += '</ul>';
+            cambiosDiv.innerHTML = cambHtml;
+        } else {
+            cambiosDiv.innerHTML = '';
+        }
+        const refsDiv = document.getElementById('resultado-referencias');
+        if (extra.referencias.length > 0) {
+            let refHtml = '<strong>Referencias:</strong><ul>';
+            extra.referencias.forEach(r => {
+                refHtml += `<li><strong>${r.ref}</strong>: ${r.desc}</li>`;
+            });
+            refHtml += '</ul>';
+            refsDiv.innerHTML = refHtml;
+        } else {
+            refsDiv.innerHTML = '';
+        }
+        const adv = extractAdvanced(texto);
+        const plazosDiv = document.getElementById('resultado-plazos');
+        if (adv.plazos.length > 0) {
+            let plHtml = '<strong>Plazos y vigencias:</strong><ul>';
+            adv.plazos.forEach(p => { plHtml += `<li>${p}</li>`; });
+            plHtml += '</ul>';
+            plazosDiv.innerHTML = plHtml;
+        } else {
+            plazosDiv.innerHTML = '';
+        }
+        const excDiv = document.getElementById('resultado-excepciones');
+        if (adv.excepciones.length > 0) {
+            let exHtml = '<strong>Excepciones:</strong><ul>';
+            adv.excepciones.forEach(e => { exHtml += `<li>${e}</li>`; });
+            exHtml += '</ul>';
+            excDiv.innerHTML = exHtml;
+        } else {
+            excDiv.innerHTML = '';
+        }
+        const riesgDiv = document.getElementById('resultado-riesgos');
+        if (adv.riesgos.length > 0) {
+            let rgHtml = '<strong>Riesgos jurídicos:</strong><ul>';
+            adv.riesgos.forEach(rg => { rgHtml += `<li>${rg}</li>`; });
+            rgHtml += '</ul>';
+            riesgDiv.innerHTML = rgHtml;
+        } else {
+            riesgDiv.innerHTML = '';
+        }
+        const costDiv = document.getElementById('resultado-costos');
+        if (adv.costos.length > 0) {
+            let coHtml = '<strong>Costos e impacto financiero:</strong><ul>';
+            adv.costos.forEach(c => { coHtml += `<li>${c}</li>`; });
+            coHtml += '</ul>';
+            costDiv.innerHTML = coHtml;
+        } else {
+            costDiv.innerHTML = '';
+        }
+        const derDiv = document.getElementById('resultado-derechos');
+        if (adv.derechos.length > 0) {
+            let drHtml = '<strong>Derechos afectados:</strong><ul>';
+            adv.derechos.forEach(d => { drHtml += `<li>${d}</li>`; });
+            drHtml += '</ul>';
+            derDiv.innerHTML = drHtml;
+        } else {
+            derDiv.innerHTML = '';
+        }
+        const impDiv = document.getElementById('resultado-impacto');
+        if (adv.impacto.length > 0) {
+            let imHtml = '<strong>Impacto administrativo:</strong><ul>';
+            adv.impacto.forEach(i => { imHtml += `<li>${i}</li>`; });
+            imHtml += '</ul>';
+            impDiv.innerHTML = imHtml;
+        } else {
+            impDiv.innerHTML = '';
+        }
+        const mejDiv = document.getElementById('resultado-mejoras');
+        if (adv.mejoras.length > 0) {
+            let meHtml = '<strong>Obsolescencias y mejoras:</strong><ul>';
+            adv.mejoras.forEach(mj => { meHtml += `<li>${mj}</li>`; });
+            meHtml += '</ul>';
+            mejDiv.innerHTML = meHtml;
+        } else {
+            mejDiv.innerHTML = '';
+        }
+    });
 
-// Calcular prioridad
-document.getElementById('btn-calcular').addEventListener('click', () => {
-    const codigo = document.getElementById('codigo-analisis').value.trim();
-    const impacto = document.getElementById('impacto').value;
-    const urgencia = document.getElementById('urgencia').value;
-    const resultDiv = document.getElementById('resultado-prioridad');
-    resultDiv.innerHTML = '';
-    if (!codigo) {
-        resultDiv.textContent = 'Indique el código de la norma primero.';
-        return;
-    }
-    const reg = registros.find(r => r.codigo === codigo);
-    if (!reg) {
-        resultDiv.textContent = 'El código no existe en el registro.';
-        return;
-    }
-    if (!impacto || !urgencia) {
-        resultDiv.textContent = 'Seleccione impacto y urgencia.';
-        return;
-    }
-    let prioridad;
-    let clase;
-    if (impacto === 'Alto' && urgencia === 'Inmediata') {
-        prioridad = '🔴 Alta';
-        clase = 'alta';
-    } else if (impacto === 'Alto' || urgencia === '30 días') {
-        prioridad = '🟠 Media';
-        clase = 'media';
-    } else {
-        prioridad = '🟢 Baja';
-        clase = 'baja';
-    }
-    // Guardamos prioridad, impacto y urgencia en registro
-    reg.prioridad = prioridad;
-    reg.prioridadClass = clase;
-    reg.impacto = impacto;
-    reg.urgencia = urgencia;
-    resultDiv.innerHTML = 'Prioridad: <span class="badge ' + clase + '">' + prioridad + '</span>';
+    // Calcular prioridad
+    document.getElementById('btn-calcular').addEventListener('click', () => {
+        const codigoAnalisis = document.getElementById('codigo-analisis').value.trim();
+        const impactoVal = document.getElementById('impacto').value;
+        const urgenciaVal = document.getElementById('urgencia').value;
+        const resultDiv = document.getElementById('resultado-prioridad');
+        resultDiv.innerHTML = '';
+        if (!codigoAnalisis) {
+            resultDiv.textContent = 'Indique el código de la norma primero.';
+            return;
+        }
+        const reg = registros.find(r => r.codigo === codigoAnalisis);
+        if (!reg) {
+            resultDiv.textContent = 'El código no existe en el registro.';
+            return;
+        }
+        if (!impactoVal || !urgenciaVal) {
+            resultDiv.textContent = 'Seleccione impacto y urgencia.';
+            return;
+        }
+        let prioridad;
+        let clase;
+        if (impactoVal === 'Alto' && urgenciaVal === 'Inmediata') {
+            prioridad = '🔴 Alta';
+            clase = 'alta';
+        } else if (impactoVal === 'Alto' || urgenciaVal === '30 días') {
+            prioridad = '🟠 Media';
+            clase = 'media';
+        } else {
+            prioridad = '🟢 Baja';
+            clase = 'baja';
+        }
+        reg.prioridad = prioridad;
+        reg.prioridadClass = clase;
+        reg.impacto = impactoVal;
+        reg.urgencia = urgenciaVal;
+        resultDiv.innerHTML = 'Prioridad: <span class="badge ' + clase + '">' + prioridad + '</span>';
+        updateTable();
+    });
+
+    // Actualizar tabla manualmente
+    document.getElementById('btn-actualizar').addEventListener('click', () => {
+        updateTable();
+    });
+
+    // Mostrar registros existentes al iniciar
     updateTable();
-});
+}
 
-// Actualizar tabla manualmente
-document.getElementById('btn-actualizar').addEventListener('click', () => {
-    updateTable();
-});
-
-// Al cargar la página, mostrar los registros existentes
-document.addEventListener('DOMContentLoaded', () => {
-    updateTable();
-});
+// Inicializar listeners cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', initListeners);
