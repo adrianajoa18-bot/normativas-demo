@@ -3,10 +3,9 @@ body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     /* Fondo con imagen y superposición translúcida para que sea agradable a la vista */
-    background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('48cd6d62-e5a2-4694-ae12-eb75699e2a50.png');
-    background-size: cover;
+background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('background_new.png') no-repeat center/cover;
     background-attachment: fixed;
-    background-position: center;
+ 
     color: #333;
 }
 
