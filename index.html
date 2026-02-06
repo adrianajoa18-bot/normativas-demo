@@ -54,6 +54,14 @@
             <div id="resultado-checklist" class="checklist"></div>
             <div id="resultado-cambios" class="changes"></div>
             <div id="resultado-referencias" class="references"></div>
+            <!-- Análisis avanzado: plazos, excepciones, riesgos, costos, derechos, impacto administrativo y mejoras -->
+            <div id="resultado-plazos" class="changes"></div>
+            <div id="resultado-excepciones" class="changes"></div>
+            <div id="resultado-riesgos" class="changes"></div>
+            <div id="resultado-costos" class="changes"></div>
+            <div id="resultado-derechos" class="changes"></div>
+            <div id="resultado-impacto" class="changes"></div>
+            <div id="resultado-mejoras" class="changes"></div>
             <div class="prioridad-config">
                 <label>Impacto</label>
                 <select id="impacto">
@@ -73,7 +81,7 @@
         </section>
         <section class="panel" id="panel-tablero">
             <h2>3) Tablero</h2>
-            
+            <table>
                 <thead>
                     <tr>
                         <th>Código</th>
@@ -81,10 +89,11 @@
                         <th>Tema</th>
                         <th>Estado</th>
                         <th>Prioridad</th>
+                        <th>Urgencia</th>
                         <th>Responsable</th>
                         <th>Acciones</th>
-                
-                </></thead>
+                    </tr>
+                </thead>
                 <tbody id="tabla-registros">
                     <!-- filas dinámicas -->
                 </tbody>
