@@ -2,10 +2,9 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Fondo con imagen y superposición translúcida para que sea agradable a la vista */
-background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('background_new.png') no-repeat center/cover;
+    /* Fondo con la nueva imagen de ondas azules y la gata en círculo, más una capa translúcida para suavizar el contraste. */
+    background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('3c2b342b-9448-4223-b4b2-b6fff9ba0816.png') no-repeat center/cover;
     background-attachment: fixed;
- 
     color: #333;
 }
 
