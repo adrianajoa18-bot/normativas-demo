@@ -3,6 +3,10 @@ body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f8fc;
+    background-image: url('48cd6d62-e5a2-4694-ae12-eb75699e2a50.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top right;
     color: #333;
 }
 
@@ -101,6 +105,42 @@ button:hover {
     border-radius: 6px;
     font-size: 0.85rem;
     white-space: pre-wrap;
+}
+
+/* Checklist y cambios */
+.checklist, .changes, .references {
+    margin-top: 15px;
+    background: #fdf6e3;
+    border: 1px solid #f0e1bc;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+.checklist table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+.checklist th {
+    background: #f0ad4e;
+    color: #fff;
+    padding: 6px;
+    font-size: 0.8rem;
+}
+.checklist td {
+    padding: 6px;
+    border-bottom: 1px solid #f5d8a4;
+    font-size: 0.8rem;
+}
+.changes ul, .references ul {
+    padding-left: 20px;
+    margin: 6px 0;
+}
+.changes li, .references li {
+    margin-bottom: 4px;
+}
+.changes strong, .references strong {
+    color: #2E5A98;
 }
 
 .prioridad-config {
