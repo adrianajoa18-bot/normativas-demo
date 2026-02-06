@@ -88,6 +88,13 @@ const CHECKLIST = [
 const REF_EXPLANATIONS = {
     'Ley 20091': 'La Ley 20.091 regula la actividad aseguradora en Argentina y establece las bases del control y funcionamiento de las entidades de seguros.',
     'RGAA': 'Reglamento General de la Actividad Aseguradora, conjunto de normas que complementan la Ley 20.091 y regulan detalles operativos y técnicos.'
+        ,
+        // Constitucion y organismos: entradas adicionales para dotar de contexto jurídico
+        'ConstituciónNacional': 'La Constitución Nacional argentina es la norma fundamental que organiza el Estado y consagra derechos y garantías de los habitantes.',
+        'ConstitucionNacional': 'La Constitución Nacional argentina es la norma fundamental que organiza el Estado y consagra derechos y garantías de los habitantes.',
+        'GerenciaAutorizacionesyRegistros': 'Gerencia de la Superintendencia de Seguros de la Nación encargada de las autorizaciones y registros de entidades aseguradoras y reaseguradoras.',
+        'GerenciaEstudiosyEstadisticas': 'Gerencia de la Superintendencia de Seguros de la Nación encargada de elaborar estudios y estadísticas sobre el mercado asegurador.',
+        'GerenciaAsuntosJuridicos': 'Gerencia de la Superintendencia de Seguros de la Nación que brinda asesoramiento legal y elabora dictámenes en materia aseguradora.'
 };
 
 function detectChangesAndRefs(text, hasModificaciones) {
@@ -113,7 +120,29 @@ function detectChangesAndRefs(text, hasModificaciones) {
         const key = ref.replace(/\s+/g, '');
         return { ref, desc: REF_EXPLANATIONS[key] || 'Referencia identificada en el texto. Se requiere análisis adicional para su interpretación.' };
     });
+
+        // Genera resúmenes de cada artículo para ofrecer un análisis más detallado.
+        const artSummaries = summarizeArticles(text);
+        artSummaries.forEach(as => {
+            cambios.push(`Artículo ${as.num}: ${as.summary}`);
+        });
     return { cambios, referencias };
+}
+
+// Resumen de artículos: extrae número y primeras palabras de cada artículo para mejorar el análisis.
+function summarizeArticles(text) {
+    const articles = [];
+    // Coincide con “ARTICULO” o “ARTÍCULO” seguido de número y luego el texto del artículo.
+    const regex = /ART(?:Í|I)CULO\s*([0-9IVXLCDM]+)°?\.?\s*-?\s*([^\n]+)/gi;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        const num = match[1];
+        // Tomar las primeras 20 palabras del contenido como resumen
+        const words = match[2].trim().split(/\s+/);
+        const summary = words.slice(0, 20).join(' ');
+        articles.push({ num, summary: summary + (words.length > 20 ? '…' : '') });
+    }
+    return articles;
 }
 
 // Extrae información avanzada: plazos, excepciones, riesgos, costos, derechos, impacto administrativo y mejoras.
