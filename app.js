@@ -239,6 +239,7 @@ function updateTable() {
             <td>${reg.urgencia || ''}</td>
             <td>${reg.responsable}</td>
             <td>
+                <button class="accion-btn ver-btn" data-codigo="${reg.codigo}">Ver</button>
                 <button class="accion-btn editar-btn" data-codigo="${reg.codigo}">Editar</button>
                 <button class="accion-btn eliminar-btn" data-codigo="${reg.codigo}">Eliminar</button>
             </td>`;
@@ -255,7 +256,20 @@ function initListeners() {
         const target = e.target;
         const codigo = target.getAttribute('data-codigo');
         if (!codigo) return;
-        if (target.classList.contains('editar-btn')) {
+        if (target.classList.contains('ver-btn')) {
+            // Mostrar el análisis previamente realizado para este código.
+            const reg = registros.find(r => r.codigo === codigo);
+            if (!reg) return;
+            if (!reg.texto) {
+                alert('No se ha analizado esta norma aún.');
+                return;
+            }
+            // Rellenar el formulario de análisis con el texto y código guardados
+            document.getElementById('codigo-analisis').value = reg.codigo;
+            document.getElementById('texto').value = reg.texto;
+            // Desencadenar el análisis nuevamente para mostrar los resultados
+            document.getElementById('btn-analizar').click();
+        } else if (target.classList.contains('editar-btn')) {
             const reg = registros.find(r => r.codigo === codigo);
             if (!reg) return;
             codigoEditando = codigo;
@@ -396,6 +410,16 @@ function initListeners() {
             refsDiv.innerHTML = '';
         }
         const adv = extractAdvanced(texto);
+        // Guardar el texto y resultados en el registro para futuras visualizaciones
+        reg.texto = texto;
+        // Almacenar los resultados procesados para visualización posterior (se recalcularán si cambia la lógica)
+        reg.analisisResultados = {
+            analisis,
+            cambios: extra.cambios,
+            referencias: extra.referencias,
+            avanzado: adv
+        };
+        saveRegistros();
         const plazosDiv = document.getElementById('resultado-plazos');
         if (adv.plazos.length > 0) {
             let plHtml = '<strong>Plazos y vigencias:</strong><ul>';
